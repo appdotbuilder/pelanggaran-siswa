@@ -65,8 +65,7 @@ export function LoginForm({ onLogin, isLoading = false }: LoginFormProps) {
 
       <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
         <p className="text-sm text-blue-800 font-medium mb-1">Demo Credentials:</p>
-        <p className="text-xs text-blue-700">Username: admin | Password: admin123</p>
-        <p className="text-xs text-blue-700">Username: guru | Password: guru123</p>
+        <p className="text-xs text-blue-700">Username: user | Password: user</p>
       </div>
     </form>
   );

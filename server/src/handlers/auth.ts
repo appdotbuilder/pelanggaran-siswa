@@ -115,7 +115,7 @@ export async function setupAdminUser(): Promise<{ success: boolean; message: str
     // Check if admin user already exists
     const existingAdmins = await db.select()
       .from(usersTable)
-      .where(eq(usersTable.username, 'admin'))
+      .where(eq(usersTable.username, 'user'))
       .execute();
 
     if (existingAdmins.length > 0) {
@@ -130,8 +130,8 @@ export async function setupAdminUser(): Promise<{ success: boolean; message: str
 
     // Create admin user using existing createUser function
     const adminInput: CreateUserInput = {
-      username: 'admin',
-      password: 'admin123',
+      username: 'user',
+      password: 'user',
       role: 'admin'
     };
 
