@@ -1,43 +1,111 @@
+import { db } from '../db';
+import { usersTable } from '../db/schema';
 import { type LoginInput, type User, type CreateUserInput } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export async function login(input: LoginInput): Promise<User> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is to authenticate users (admin/teacher) with username and password.
-    // Should verify credentials against hashed password in database and return user data.
-    return Promise.resolve({
-        id: 1,
-        username: input.username,
-        password: '', // Never return password in response
-        role: 'admin',
-        created_at: new Date(),
-        updated_at: new Date()
-    } as User);
+  try {
+    // Find user by username
+    const users = await db.select()
+      .from(usersTable)
+      .where(eq(usersTable.username, input.username))
+      .execute();
+
+    if (users.length === 0) {
+      throw new Error('Invalid username or password');
+    }
+
+    const user = users[0];
+
+    // Verify password using Bun's built-in password verification
+    const isValidPassword = await Bun.password.verify(input.password, user.password);
+    
+    if (!isValidPassword) {
+      throw new Error('Invalid username or password');
+    }
+
+    // Return user data without password
+    return {
+      id: user.id,
+      username: user.username,
+      password: '', // Never return password in response
+      role: user.role as 'admin' | 'teacher',
+      created_at: user.created_at,
+      updated_at: user.updated_at
+    };
+  } catch (error) {
+    console.error('Login failed:', error);
+    throw error;
+  }
 }
 
 export async function createUser(input: CreateUserInput): Promise<User> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is to create a new user account (admin/teacher).
-    // Should hash the password before storing in database.
-    return Promise.resolve({
-        id: 1,
+  try {
+    // Check if username already exists
+    const existingUsers = await db.select()
+      .from(usersTable)
+      .where(eq(usersTable.username, input.username))
+      .execute();
+
+    if (existingUsers.length > 0) {
+      throw new Error('Username already exists');
+    }
+
+    // Hash password using Bun's built-in password hashing
+    const hashedPassword = await Bun.password.hash(input.password);
+
+    // Insert new user
+    const result = await db.insert(usersTable)
+      .values({
         username: input.username,
-        password: '', // Never return password in response
-        role: input.role,
-        created_at: new Date(),
-        updated_at: new Date()
-    } as User);
+        password: hashedPassword,
+        role: input.role
+      })
+      .returning()
+      .execute();
+
+    const user = result[0];
+
+    // Return user data without password
+    return {
+      id: user.id,
+      username: user.username,
+      password: '', // Never return password in response
+      role: user.role as 'admin' | 'teacher',
+      created_at: user.created_at,
+      updated_at: user.updated_at
+    };
+  } catch (error) {
+    console.error('User creation failed:', error);
+    throw error;
+  }
 }
 
 export async function getCurrentUser(userId: number): Promise<User | null> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is to get current authenticated user information.
-    // Should fetch user by ID from database and exclude password from response.
-    return Promise.resolve({
-        id: userId,
-        username: 'admin',
-        password: '', // Never return password in response
-        role: 'admin',
-        created_at: new Date(),
-        updated_at: new Date()
-    } as User);
+  try {
+    // Find user by ID
+    const users = await db.select()
+      .from(usersTable)
+      .where(eq(usersTable.id, userId))
+      .execute();
+
+    if (users.length === 0) {
+      return null;
+    }
+
+    const user = users[0];
+
+    // Return user data without password
+    return {
+      id: user.id,
+      username: user.username,
+      password: '', // Never return password in response
+      role: user.role as 'admin' | 'teacher',
+      created_at: user.created_at,
+      updated_at: user.updated_at
+    };
+  } catch (error) {
+    console.error('Get current user failed:', error);
+    throw error;
+  }
 }
