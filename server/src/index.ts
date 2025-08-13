@@ -20,7 +20,7 @@ import {
 } from './schema';
 
 // Import handlers
-import { login, createUser, getCurrentUser } from './handlers/auth';
+import { login, createUser, getCurrentUser, setupAdminUser } from './handlers/auth';
 import { 
   getStudents, 
   getStudentById, 
@@ -77,7 +77,10 @@ const appRouter = router({
     
     getCurrentUser: publicProcedure
       .input(z.number())
-      .query(({ input }) => getCurrentUser(input))
+      .query(({ input }) => getCurrentUser(input)),
+    
+    setupAdmin: publicProcedure
+      .mutation(() => setupAdminUser())
   }),
 
   // Student management procedures

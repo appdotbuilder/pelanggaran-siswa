@@ -109,3 +109,43 @@ export async function getCurrentUser(userId: number): Promise<User | null> {
     throw error;
   }
 }
+
+export async function setupAdminUser(): Promise<{ success: boolean; message: string }> {
+  try {
+    // Check if admin user already exists
+    const existingAdmins = await db.select()
+      .from(usersTable)
+      .where(eq(usersTable.username, 'admin'))
+      .execute();
+
+    if (existingAdmins.length > 0) {
+      const admin = existingAdmins[0];
+      if (admin.role === 'admin') {
+        return {
+          success: true,
+          message: 'Admin user already exists'
+        };
+      }
+    }
+
+    // Create admin user using existing createUser function
+    const adminInput: CreateUserInput = {
+      username: 'admin',
+      password: 'admin123',
+      role: 'admin'
+    };
+
+    await createUser(adminInput);
+
+    return {
+      success: true,
+      message: 'Admin user created successfully'
+    };
+  } catch (error) {
+    console.error('Setup admin user failed:', error);
+    return {
+      success: false,
+      message: 'Failed to setup admin user: ' + (error instanceof Error ? error.message : 'Unknown error')
+    };
+  }
+}
